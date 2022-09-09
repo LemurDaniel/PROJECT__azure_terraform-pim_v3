@@ -170,19 +170,7 @@ Map of Objects in following pattern required:
   "mgm_name" = {
     assignment_scope = "/managementGroups/..."
     pim_assignments = {
-      "QuotaReqOp" = {
-          role_name_rbac = "Quota Request Operator"
-          settings = {
-            maximumGrantPeriodInMinutes = "60"
-            requireMFA                  = true
-            requireJustification        = true
-            notifications = {
-              membersAssignmentEligableRole = {}
-              membersAssignmentActiveRole   = {}
-              membersActivateRole           = {}
-            }
-          }
-        }
+      
     }
   }
 
