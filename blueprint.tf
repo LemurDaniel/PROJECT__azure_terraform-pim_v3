@@ -146,7 +146,7 @@ locals {
 
 data "azurerm_client_config" "current" {}
 
-/*
+
 module "pim_assignment_rbac" {
   source = "./pim_assignment_rbac"
 
@@ -158,9 +158,9 @@ module "pim_assignment_rbac" {
 
   assignment_scope = each.value.assignment_scope
   pim_assignments  = each.value.pim_assignments
-  aad_group_owner_ids   = data.azurerm_client_config.current.client_id
+  aad_group_owner_ids   = [data.azurerm_client_config.current.object_id]
 }
-*/
+
 
 
 /*

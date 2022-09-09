@@ -90,12 +90,12 @@ resource "null_resource" "pim_assignment_schedule_request" {
 
 
   provisioner "local-exec" {
-    command = "az rest --method PUT --headers Content-type=application/json --url '${self.triggers.admin_update_request_url}' --body '${self.triggers.admin_update_request}'"
+    command = "az rest --method PUT --headers Content-type=application/json --url ${self.triggers.admin_update_request_url} --body ${self.triggers.admin_update_request}"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "az rest --method PUT --headers Content-type=application/json --url '${self.triggers.admin_remove_request_url}' --body '${self.triggers.admin_remove_request}'"
+    command = "az rest --method PUT --headers Content-type=application/json --url ${self.triggers.admin_remove_request_url} --body ${self.triggers.admin_remove_request}"
   }
 
 }

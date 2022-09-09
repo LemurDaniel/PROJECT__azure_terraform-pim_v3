@@ -51,12 +51,12 @@ resource "null_resource" "pim_assignment_expiration_settings" {
   }
 
   provisioner "local-exec" {
-    command = "az rest --method PATCH --headers Content-type=application/json --url '${self.triggers.role_management_patch_url}' --body '${self.triggers.assignment_rule_request_body_custom}'"
+    command = "az rest --method PATCH --headers Content-type=application/json --url ${self.triggers.role_management_patch_url} --body ${self.triggers.assignment_rule_request_body_custom}"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "az rest --method PATCH --headers Content-type=application/json --url '${self.triggers.role_management_patch_url}' --body '${self.triggers.assignment_rule_request_body_default}'"
+    command = "az rest --method PATCH --headers Content-type=application/json --url ${self.triggers.role_management_patch_url} --body ${self.triggers.assignment_rule_request_body_default}"
   }
 
 }
@@ -116,12 +116,12 @@ resource "null_resource" "pim_assignment_enablement_settings" {
   }
 
   provisioner "local-exec" {
-    command = "az rest --method PATCH --headers Content-type=application/json --url '${self.triggers.role_management_patch_url}' --body '${self.triggers.enablement_rule_request_body_custom}'"
+    command = "az rest --method PATCH --headers Content-type=application/json --url ${self.triggers.role_management_patch_url} --body ${self.triggers.enablement_rule_request_body_custom}"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "az rest --method PATCH --headers Content-type=application/json --url '${self.triggers.role_management_patch_url}' --body '${self.triggers.enablement_rule_request_body_default}'"
+    command = "az rest --method PATCH --headers Content-type=application/json --url ${self.triggers.role_management_patch_url} --body ${self.triggers.enablement_rule_request_body_default}"
   }
 
 

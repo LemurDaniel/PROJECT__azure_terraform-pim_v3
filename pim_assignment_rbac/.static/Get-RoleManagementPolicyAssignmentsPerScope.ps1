@@ -3,12 +3,12 @@
 $base_url = "https://management.azure.com/{0}/providers/Microsoft.Authorization/roleManagementPolicyAssignments?api-version=2020-10-01"
 $path = (Get-ChildItem -Recurse -Filter ".static" | Where-Object { $_.FullName.Contains("pim_assignment_rbac") }).FullName
 
-$tenantId = "7ecb8dff-97cb-4f4a-94d3-86a4b39a84f2"
+$tenantId = "be0b9f44-0aee-447a-90b1-688ac0334c2c"
 
 $scopes = Search-AzGraph -ManagementGroup $tenantId -Query "
    resourcecontainers 
    | where tenantId == '$tenantId'
-   | where tolower(type) in ('microsoft.management/managementgroups', 'microsoft.resources/subscriptions')
+   | where tolower(type) in ('microsoft.management/managementgroups')
    | where properties.details.managementGroupAncestorsChain[-1].name == '$tenantId' or 
       properties.managementGroupAncestorsChain[-1].name == '$tenantId'
    | extend resourceId = iff(['type'] == 'microsoft.management/managementgroups', strcat('/providers/microsoft.management/managementgroups/',name), strcat('/providers/Microsoft.Subscription/subscriptions/',subscriptionId))

@@ -18,14 +18,22 @@ variable "pim_defaults" {
         notification_level = "Critical"
         notification_recipients = []
       }
-      activation_notice_requestor = {
+      eligible_notice_requestor = {
         default_recipients = true
         notification_level = "All"
         notification_recipients = []
       }
-      activation_notice_approver = {
+      eligible_notice_approver = {
         default_recipients = true
         notification_level = "All"
+        notification_recipients = []
+      }
+    }
+
+    notifications_activation = {
+      activation_notice_admin = {
+        default_recipients = true
+        notification_level = "Critical"
         notification_recipients = []
       }
     }
