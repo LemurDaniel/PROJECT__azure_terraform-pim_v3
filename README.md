@@ -29,7 +29,7 @@ It's meant to use a for_each to iterate over all different scopes with defined P
 >        // .
 >        // .
 >      }
->    },
+>    }
 >
 >    mgm_sandbox = {
 >      assignment_scope = "managementGroups/sandbox"
@@ -81,7 +81,7 @@ PIM-Assignments are defined for each scope under pim_assigments as follows:
 >            activation_rules   = ["Justification", "Ticketing", "MFA"] // Activation Rules for eligible assignment activations
 >            required_approvers = []                                    // Email_list|aad_group_names of additional required approvers
 >          }
->        },
+>        }
 >
 >        "DNSZoneContrib" = {
 >          role_name_rbac      = "DNS Zone Contributor"
