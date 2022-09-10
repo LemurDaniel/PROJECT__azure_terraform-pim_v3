@@ -30,7 +30,7 @@ It's meant to use a for_each to iterate over all different scopes with defined P
 >        // .
 >      }
 >    },
->    
+>
 >    mgm_sandbox = {
 >      assignment_scope = "managementGroups/sandbox"
 >      pim_assignments = {
@@ -52,9 +52,9 @@ It's meant to use a for_each to iterate over all different scopes with defined P
 >    if length(values(scope_config.pim_assignments)) > 0
 >  }
 >
->  assignment_scope = each.value.assignment_scope
->  pim_assignments  = each.value.pim_assignments
->  aad_group_owner_ids   = [data.azurerm_client_config.current.object_id]
+>  assignment_scope    = each.value.assignment_scope
+>  pim_assignments     = each.value.pim_assignments
+>  aad_group_owner_ids = [data.azurerm_client_config.current.object_id]
 >}
 >
 >```
@@ -68,22 +68,20 @@ PIM-Assignments are defined for each scope under pim_assigments as follows:
 >```terraform
 >
 >locals {
->  pim_assignments_rbac_all_per_scope = { 
->    "mgm_sandbox" = {
+>  pim_assignments_rbac_all_per_scope = {
+>    mgm_sandbox = {
 >      assignment_scope = "managementGroups/sandbox"
 >      pim_assignments = {
->        "<assignment_name" = {
->          role_name_rbac      = "<rbac_role_name_for_pim>"
->          assignment_eligible = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)>" // Assignment length for eligible assignments
->          assignment_active = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)>" // Assignment length for active assignments (can be 1 >Month(s) or 1.5 Month(s), etc.)
+>        "<assignment_name>" = {
+>          role_name_rbac      = "<rbac_role_name_for_pim"
+>          assignment_eligible = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for eligible assignments
+>          assignment_active   = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for active assignments (can be 1 Month(s) or 1.5 Month(s), etc.)
 >          settings_activation = {
->            maximum_duration = "<0.5-24 Hour(s)>" // Maximum Activation length for eligible assignment activations
->            activation_rules = ["Justification", "Ticketing", "MFA"] // Activation Rules for eligible assignment activations
->            required_approvers = [] // Email_list|aad_group_names of additional required approvers
+>            maximum_duration   = "<0.5-24 Hour(s)"                     // Maximum Activation length for eligible assignment activations
+>            activation_rules   = ["Justification", "Ticketing", "MFA"] // Activation Rules for eligible assignment activations
+>            required_approvers = []                                    // Email_list|aad_group_names of additional required approvers
 >          }
 >        },
->
->
 >
 >        "DNSZoneContrib" = {
 >          role_name_rbac      = "DNS Zone Contributor"
@@ -91,6 +89,7 @@ PIM-Assignments are defined for each scope under pim_assigments as follows:
 >          settings_activation = {
 >            maximum_duration = "1 Hours"
 >            activation_rules = ["Justification", "MFA"]
+>          }
 >        }
 >      }
 >    }
@@ -118,74 +117,75 @@ PIM-Assignments are defined for each scope under pim_assigments as follows:
 >```terraform
 >
 >locals {
->  pim_assignments_rbac_all_per_scope = { 
+>  pim_assignments_rbac_all_per_scope = {
 >    mgm_sandbox = {
 >      assignment_scope = "managementGroups/sandbox"
 >      pim_assignments = {
->        "<assignment_name" = {
->          role_name_rbac      = "<rbac_role_name_for_pim>"
->          assignment_eligible = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)>" // Assignment length for eligible assignments
->          assignment_active = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)>" // Assignment length for active assignments (can be 1 >Month(s) or 1.5 Month(s), etc.)
+>        "<assignment_name>" = {
+>          role_name_rbac      = "<rbac_role_name_for_pim"
+>          assignment_eligible = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for eligible assignments
+>          assignment_active   = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for active assignments (can be 1 Month(s) or 1.5 Month(s), etc.)
 >
 >          settings_activation = {
->            maximum_duration = "<0.5-24 Hour(s)>" // Maximum Activation length for eligible assignment activations
->            activation_rules = ["Justification", "Ticketing", "MFA"] // Activation Rules for eligible assignment activations
->            required_approvers = [] // Email_list|aad_group_names of additional required approvers
+>            maximum_duration   = "<0.5-24 Hour(s)"                     // Maximum Activation length for eligible assignment activations
+>            activation_rules   = ["Justification", "Ticketing", "MFA"] // Activation Rules for eligible assignment activations
+>            required_approvers = []                                    // Email_list|aad_group_names of additional required approvers
 >          }
 >
 >          notifications_eligible = {
->             eligible_notice_admin = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
->             eligible_notice_requestor = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
->             eligible_notice_approver = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
+>            eligible_notice_admin = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
+>            eligible_notice_requestor = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
+>            eligible_notice_approver = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
 >          }
 >
 >          notifications_activation = {
->             activation_notice_admin = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
->             activation_notice_requestor = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
->             activation_notice_approver = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
+>            activation_notice_admin = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
+>            activation_notice_requestor = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
+>            activation_notice_approver = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
 >          }
 >
 >          notifications_assignment = {
->             assignment_notice_admin = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
->             assignment_notice_requestor = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
->             assignment_notice_approver = {
->                default_recipients = "true|false"
->                notification_level = "All|Critical"
->                notification_recipients = []
->             }
+>            assignment_notice_admin = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
+>            assignment_notice_requestor = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
+>            assignment_notice_approver = {
+>              default_recipients      = "true|false"
+>              notification_level      = "All|Critical"
+>              notification_recipients = []
+>            }
 >          }
+>        }
 >      }
 >    }
 >  }
