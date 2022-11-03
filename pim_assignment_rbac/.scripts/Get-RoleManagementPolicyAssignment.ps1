@@ -20,10 +20,8 @@ param(
 
 $toplevel_scope_sub_guid = $toplevel_scope
 $toplevel_scope_sub_name = $toplevel_scope
-$
 if ($toplevel_scope.Contains('/providers/Microsoft.Subscription')) {
   $splitted_scope = $toplevel_scope -split '/'
-
   $azAccountSubdata = (az account list | ConvertFrom-Json) | Where-Object { $_.homeTenantId -eq $tenant_id }
   if (!([System.Guid]::TryParse($splitted_scope[4], [System.Management.Automation.PSReference][System.Guid]::Empty))) {
     $splitted_scope[4] = ($azAccountSubdata | Where-Object { $_.name -eq $splitted_scope[4] })[0].id
@@ -35,9 +33,7 @@ if ($toplevel_scope.Contains('/providers/Microsoft.Subscription')) {
   }
 }
 
-$url = [System.String]::format($base_url, $toplevel_scope)
-# Make Api-Call
-#$url = "'"+[System.String]::format($base_url, $toplevel_scope_sub_guid)+"'"
+
 $url = [System.String]::format($base_url, $toplevel_scope_sub_guid)
 $response = az rest --method GET --url $url
 $responseConvertedObject = $($response | ConvertFrom-Json).value
