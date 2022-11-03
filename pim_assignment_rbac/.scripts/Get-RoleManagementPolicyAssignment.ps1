@@ -23,21 +23,24 @@ $toplevel_scope_sub_name = $toplevel_scope
 $
 if ($toplevel_scope.Contains('/providers/Microsoft.Subscription')) {
   $splitted_scope = $toplevel_scope -split '/'
+
+  $azAccountSubdata = (az account list | ConvertFrom-Json) | Where-Object { $_.homeTenantId -eq $tenant_id }
   if (!([System.Guid]::TryParse($splitted_scope[4], [System.Management.Automation.PSReference][System.Guid]::Empty))) {
-    $splitted_scope[4] = (Get-AzSubscription -TenantId $tenant_id -SubscriptionName $splitted_scope[4]).id
+    $splitted_scope[4] = ($azAccountSubdata | Where-Object { $_.name -eq $splitted_scope[4] })[0].id
     $toplevel_scope_sub_guid = ($splitted_scope -join '/')
   }
   else {
-    $splitted_scope[4] = (Get-AzSubscription -TenantId $tenant_id -SubscriptionId $splitted_scope[4]).name
+    $splitted_scope[4] = ($azAccountSubdata | Where-Object { $_.id -eq $splitted_scope[4] })[0].name
     $toplevel_scope_sub_name = ($splitted_scope -join '/')
   }
 }
 
-
+$url = [System.String]::format($base_url, $toplevel_scope)
 # Make Api-Call
+#$url = "'"+[System.String]::format($base_url, $toplevel_scope_sub_guid)+"'"
 $url = [System.String]::format($base_url, $toplevel_scope_sub_guid)
-$response = Invoke-AzRestMethod -Method GET -Uri $url
-$responseConvertedObject = $($response.Content | ConvertFrom-Json).value
+$response = az rest --method GET --url $url
+$responseConvertedObject = $($response | ConvertFrom-Json).value
 
 # Parse Result Object
 $MapOfRoleManagementPolicyAssigments_PerRoleDisplayName = [System.Collections.Hashtable]::new()
