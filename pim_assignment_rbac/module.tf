@@ -14,7 +14,7 @@ module "pim_settings_activation_elgibile" {
     for assignment_name, pim_assignment in var.pim_assignments :
     assignment_name => {
 
-      policy_guid            = local.mgm_assig_by_role[pim_assignment.role_name_rbac].policy_guid
+      policy_guid            = data.external.role_management_policy_assignment[pim_assignment.role_name_rbac].result.policy_guid
       maximum_duration_hours = pim_assignment.settings_activation.maximum_duration
       required_approvers     = lookup(pim_assignment.settings_activation, "required_approvers", [])
       activation_rules = [
@@ -62,7 +62,7 @@ module "pim_settings_assignment_eligible" {
 
   # Deployment Scope and Role Management Policy GUID
   scope_resource_id           = local.pim_current_scope_resource_id
-  role_management_policy_guid = local.mgm_assig_by_role[each.value.role_name_rbac].policy_guid
+  role_management_policy_guid = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.policy_guid
 
   # Assignment-Settings specific variables.
   schedule_type       = "eligible"
@@ -88,7 +88,7 @@ module "pim_settings_assignment_active" {
 
   # Deployment Scope and Role Management Policy GUID
   scope_resource_id           = local.pim_current_scope_resource_id
-  role_management_policy_guid = local.mgm_assig_by_role[each.value.role_name_rbac].policy_guid
+  role_management_policy_guid = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.policy_guid
 
   # Assignment-Settings specific variables.
   schedule_type       = "active"
@@ -109,19 +109,19 @@ locals {
   notifications_elgible = {
     for assignment_name, pim_assignment in var.pim_assignments :
     "${assignment_name}_notification_eligible" => {
-      policy_guid = local.mgm_assig_by_role[pim_assignment.role_name_rbac].policy_guid
+      policy_guid = data.external.role_management_policy_assignment[pim_assignment.role_name_rbac].result.policy_guid
 
-      notification_type      = "eligible"
-      notification_admin     = lookup(
-          lookup(pim_assignment, "notifications_eligible", lookup(var.pim_defaults, "notifications_eligible", null)),
+      notification_type = "eligible"
+      notification_admin = lookup(
+        lookup(pim_assignment, "notifications_eligible", lookup(var.pim_defaults, "notifications_eligible", null)),
       "eligible_notice_admin", null)
 
-      notification_requestor =  lookup(
-          lookup(pim_assignment, "notifications_eligible", lookup(var.pim_defaults, "notifications_eligible", null)),
+      notification_requestor = lookup(
+        lookup(pim_assignment, "notifications_eligible", lookup(var.pim_defaults, "notifications_eligible", null)),
       "eligible_notice_requestor", null)
 
       notification_approver = lookup(
-          lookup(pim_assignment, "notifications_eligible", lookup(var.pim_defaults, "notifications_eligible", null)),
+        lookup(pim_assignment, "notifications_eligible", lookup(var.pim_defaults, "notifications_eligible", null)),
       "eligible_notice_approver", null)
 
 
@@ -137,19 +137,19 @@ locals {
   notifications_activation = {
     for assignment_name, pim_assignment in var.pim_assignments :
     "${assignment_name}_notification_activation" => {
-      policy_guid = local.mgm_assig_by_role[pim_assignment.role_name_rbac].policy_guid
+      policy_guid = data.external.role_management_policy_assignment[pim_assignment.role_name_rbac].result.policy_guid
 
-      notification_type      = "activation"
-      notification_admin     = lookup(
-          lookup(pim_assignment, "notifications_activation", lookup(var.pim_defaults, "notifications_activation", null)),
+      notification_type = "activation"
+      notification_admin = lookup(
+        lookup(pim_assignment, "notifications_activation", lookup(var.pim_defaults, "notifications_activation", null)),
       "activation_notice_admin", null)
 
-      notification_requestor =  lookup(
-          lookup(pim_assignment, "notifications_activation", lookup(var.pim_defaults, "notifications_activation", null)),
+      notification_requestor = lookup(
+        lookup(pim_assignment, "notifications_activation", lookup(var.pim_defaults, "notifications_activation", null)),
       "activation_notice_requestor", null)
 
       notification_approver = lookup(
-          lookup(pim_assignment, "notifications_activation", lookup(var.pim_defaults, "notifications_activation", null)),
+        lookup(pim_assignment, "notifications_activation", lookup(var.pim_defaults, "notifications_activation", null)),
       "activation_notice_approver", null)
 
       notification_settings_check = [
@@ -164,19 +164,19 @@ locals {
   notifications_active = {
     for assignment_name, pim_assignment in var.pim_assignments :
     "${assignment_name}_notification_active" => {
-      policy_guid = local.mgm_assig_by_role[pim_assignment.role_name_rbac].policy_guid
+      policy_guid = data.external.role_management_policy_assignment[pim_assignment.role_name_rbac].result.policy_guid
 
-      notification_type      = "active"
-      notification_admin     = lookup(
-          lookup(pim_assignment, "notifications_assignment", lookup(var.pim_defaults, "notifications_assignment", null)),
+      notification_type = "active"
+      notification_admin = lookup(
+        lookup(pim_assignment, "notifications_assignment", lookup(var.pim_defaults, "notifications_assignment", null)),
       "assignment_notice_admin", null)
 
-      notification_requestor =  lookup(
-          lookup(pim_assignment, "notifications_assignment", lookup(var.pim_defaults, "notifications_assignment", null)),
+      notification_requestor = lookup(
+        lookup(pim_assignment, "notifications_assignment", lookup(var.pim_defaults, "notifications_assignment", null)),
       "assignment_notice_requestor", null)
 
       notification_approver = lookup(
-          lookup(pim_assignment, "notifications_assignment", lookup(var.pim_defaults, "notifications_assignment", null)),
+        lookup(pim_assignment, "notifications_assignment", lookup(var.pim_defaults, "notifications_assignment", null)),
       "assignment_notice_approver", null)
 
       notification_settings_check = [
@@ -253,10 +253,11 @@ module "pim_assignment_eligible" {
   assignment_scope    = var.assignment_scope
   assignment_schedule = each.value.assignment_eligible
 
-  assignment_scope_name = local.mgm_assig_by_role[each.value.role_name_rbac].assignment_scope_name
-  role_definition     = local.mgm_assig_by_role[each.value.role_name_rbac].role_definition
-  aad_group_owner_ids = var.aad_group_owner_ids
-  
+  assignment_scope_name = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
+  role_definition_name  = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name
+  role_definition_id    = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_id
+  aad_group_owner_ids   = var.aad_group_owner_ids
+
   depends_on = [
     module.pim_settings_activation_elgibile,
     module.pim_settings_assignment_eligible
@@ -281,9 +282,10 @@ module "pim_assignment_active" {
   assignment_scope    = var.assignment_scope
   assignment_schedule = each.value.assignment_active
 
-  assignment_scope_name = local.mgm_assig_by_role[each.value.role_name_rbac].assignment_scope_name
-  role_definition     = local.mgm_assig_by_role[each.value.role_name_rbac].role_definition
-  aad_group_owner_ids = var.aad_group_owner_ids
+  assignment_scope_name = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
+  role_definition_name  = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name
+  role_definition_id    = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_id
+  aad_group_owner_ids   = var.aad_group_owner_ids
 
   depends_on = [
     module.pim_settings_activation_elgibile,

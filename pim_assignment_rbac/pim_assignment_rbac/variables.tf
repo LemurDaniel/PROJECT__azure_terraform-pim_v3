@@ -26,18 +26,21 @@ variable "aad_group_owner_ids" {
 
 #################
 
-variable "role_definition" {
-  type        = object({
-    id = string
-    displayName = string
-  })
+variable "role_definition_name" {
+  type        = string
   nullable    = false
-  description = "(Required) The RBAC-Roledefinition"
+  description = "(Required) The RBAC-Roledefinition name"
+}
+
+variable "role_definition_id" {
+  type        = string
+  nullable    = false
+  description = "(Required) The RBAC-Roledefinition id"
 }
 
 variable "assignment_schedule" {
-  type    = string
-  default = null
+  type        = string
+  default     = null
   description = "(Optional) The assignment schedule. Allowed values  are 'Null', 'Disabled', 'Permanent', '# Years', '# Months' or '# Days'. 'Disabled' => AD-Group Persists with no Assignment. 'Null' => Neither AD-Group or Assignment remains."
 
   validation {

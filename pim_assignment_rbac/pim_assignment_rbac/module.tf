@@ -23,7 +23,7 @@ locals {
       requestType      = "%s_requestType_%s"
       justification    = "pim_${var.schedule_type}_assignment_created_on_${local.current_scope.type}_${local.current_scope.name}__by_ACF_deployment_code"
       principalId      = azuread_group.pim_assignment_ad_group.id
-      roleDefinitionId = var.role_definition.id
+      roleDefinitionId = var.role_definition_id
       scheduleInfo = {
         expiration = {
           endDateTime = null
@@ -90,12 +90,12 @@ resource "null_resource" "pim_assignment_schedule_request" {
 
 
   provisioner "local-exec" {
-    command = "az rest --method PUT --headers Content-type=application/json --url ${self.triggers.admin_update_request_url} --body ${self.triggers.admin_update_request}"
+    command = "az rest --method PUT --headers Content-type=application/json --url '${self.triggers.admin_update_request_url}' --body '${self.triggers.admin_update_request}'"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "az rest --method PUT --headers Content-type=application/json --url ${self.triggers.admin_remove_request_url} --body ${self.triggers.admin_remove_request}"
+    command = "az rest --method PUT --headers Content-type=application/json --url '${self.triggers.admin_remove_request_url}' --body '${self.triggers.admin_remove_request}'"
   }
 
 }

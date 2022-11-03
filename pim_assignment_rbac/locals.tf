@@ -34,64 +34,27 @@ locals {
   )[0]
 
 
-  pim_current_scope_resource_id = local.pim_provdiers_for_scopes[local.pim_current_scope_type]
-
-  # Hardcode the result from API-Call as JSON-File? Not possible/impractical for every Scope.
-  #management_policy_assignments_url = format("https://management.azure.com/%s/providers/Microsoft.Authorization/roleManagementPolicyAssignments?$filter=name+eq+'5ac2d408-a58d-408c-aa3b-615f29fb3047_12338af0-0e69-4776-bea7-57ae8d297424'&api-version=2020-10-01", local.pim_current_scope_resource_id)
-  management_policy_assignments_url = format("https://management.azure.com/%s/providers/Microsoft.Authorization/roleManagementPolicyAssignments?api-version=2020-10-01", local.pim_current_scope_resource_id)
-  temporary_response_file_name      = "${path.module}/.static/${replace(lower(var.assignment_scope), "/", "_")}.json"
-}
-
-/*
-
-  List all assignments on the current scope since:
-    1. Current API can't get a assignment or management policy on current scope for certain role
-    2. Current API doesn't allow creation of a complete new role_management_policy
-
-*/
-
-/*
-resource "null_resource" "management_policy_assignments_by_scope" {
-
-  triggers = {
-    test             = 1
-    assignment_scope = jsonencode(var.assignment_scope)
-    pim_assignments  = jsonencode(var.pim_assignments) # Call for each pim assignment config, to reduce API-Calls?
-
-  }
-  provisioner "local-exec" {
-    command = "az rest --method GET --url ${local.management_policy_assignments_url} > ${local.temporary_response_file_name}"
-  }
+  management_policy_assignments_base_url = "https://management.azure.com/{0}/providers/Microsoft.Authorization/roleManagementPolicyAssignments?api-version=2020-10-01"
+  pim_current_scope_resource_id          = local.pim_provdiers_for_scopes[local.pim_current_scope_type]
 
 }
-data "local_file" "management_policy_assignments_by_scope" {
-  filename = local.temporary_response_file_name
 
-  depends_on = [
-    #null_resource.management_policy_assignments_by_scope
+
+data "azurerm_client_config" "current" {}
+data "external" "role_management_policy_assignment" {
+
+  for_each = toset(values(var.pim_assignments)[*].role_name_rbac)
+
+  program = ["pwsh.exe", "-NoProfile", "-file", "${path.module}/.scripts/Get-RoleManagementPolicyAssignment.ps1",
+    "-base_url", "https://management.azure.com/{0}/providers/Microsoft.Authorization/roleManagementPolicyAssignments?api-version=2020-10-01",
+    "-toplevel_scope", "${local.pim_current_scope_resource_id}",
+    "-role_name", "${each.value}",
+    "-tenant_id", "${data.azurerm_client_config.current.tenant_id}"
   ]
+
 }
-*/
 
-locals {
-  mgm_assig_by_role = {
-    for management_policy_assignments in jsondecode(file(local.temporary_response_file_name))[*] :
-    "${management_policy_assignments.properties.policyAssignmentProperties.roleDefinition.displayName}" => {
-      id             = management_policy_assignments.id
-      type           = management_policy_assignments.type
-      name           = management_policy_assignments.name
 
-      policy_guid    = split("/", management_policy_assignments.properties.policyAssignmentProperties.policy.id)[length(split("/", management_policy_assignments.properties.policyAssignmentProperties.policy.id)) - 1]
-      
-      role_definition  = management_policy_assignments.properties.policyAssignmentProperties.roleDefinition
-      assignment_scope_name = lookup(management_policy_assignments.properties.policyAssignmentProperties.scope, "displayName", split("/", var.assignment_scope)[length(split("/", var.assignment_scope))-1])
-
-      current_effective_rules = {
-        for effective_rule in management_policy_assignments.properties.effectiveRules :
-        effective_rule.id => effective_rule
-      }
-    }
-  }
-
-  # management_policy_rules_default = jsondecode(file(abspath("${path.module}/.role_management_policy_default.json")))
+output "test" {
+  value = data.external.role_management_policy_assignment
 }

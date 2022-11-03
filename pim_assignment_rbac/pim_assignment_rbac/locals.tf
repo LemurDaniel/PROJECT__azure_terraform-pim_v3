@@ -78,8 +78,8 @@ locals {
 locals {
 
   ad_group_description = {
-    eligible = "PIM Group for the RBAC-Role '${var.role_definition.displayName}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring an action to activate the role. Managed by Azure Cloud Foundation. Group memberships can be managed manually."
-    active   = "PIM Group for the RBAC-Role '${var.role_definition.displayName}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring no action to activate the role. Managed by Azure Cloud Foundation. Group memberships can be managed manually."
+    eligible = "PIM Group for the RBAC-Role '${var.role_definition_name}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring an action to activate the role. Managed by Azure Cloud Foundation. Group memberships can be managed manually."
+    active   = "PIM Group for the RBAC-Role '${var.role_definition_name}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring no action to activate the role. Managed by Azure Cloud Foundation. Group memberships can be managed manually."
   }
 }
 
