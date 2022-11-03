@@ -46,7 +46,7 @@ foreach ($roleManagementPolicyAssignment in $responseConvertedObject) {
   $rbacDisplayName = $roleManagementPolicyAssignment.properties.policyAssignmentProperties.roleDefinition.displayName
   $assignment_scope_name = ($toplevel_scope_sub_name -split '/')[-1]
 
-  # Apparantly external data sources can only handle one layer of depth with no nested objects.
+  # Apparently external data-sources can only handle one layer of depth with no nested objects as results.
   $MapOfRoleManagementPolicyAssigments_PerRoleDisplayName.add($rbacDisplayName , [PSCustomObject]@{
 
       scope                                  = $roleManagementPolicyAssignment.properties.scope
