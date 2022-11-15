@@ -58,20 +58,24 @@ resource "random_uuid" "admin_remove_request_uuid" {
   }
 }
 
-resource "time_sleep" "wait_20_seconds" {
+resource "time_sleep" "wait_30_seconds" {
+
+  depends_on = [
+    azuread_group.pim_assignment_ad_group_base
+  ]
 
   triggers = {
     admin_update_request_uuid = random_uuid.admin_update_request_uuid.result
     admin_remove_request_uuid = random_uuid.admin_remove_request_uuid.result
   }
 
-  create_duration = "20s"
+  create_duration = "30s"
 }
 
 
 # NUll Resource calling the PIM v3 ARM API
 resource "null_resource" "pim_assignment_schedule_request" {
-  depends_on = [time_sleep.wait_20_seconds]
+  depends_on = [time_sleep.wait_30_seconds]
 
   count = local.is_assignment_disabled ? 0 : 1
 

@@ -3,7 +3,7 @@ locals {
 
   pim_role_management_policy_url_base = "https://management.azure.com/%s/providers/Microsoft.Authorization/roleManagementPolicies/%s?api-version=2020-10-01"
 
-  management_policy_rules_default = jsondecode(file(abspath("${path.module}/.activation_settings_default.json")))
+  management_policy_rules_default = local.settings_activation_default  #jsondecode(file("${path.module}/.activation_settings_default.json"))
 
 
   #####################################################################################################

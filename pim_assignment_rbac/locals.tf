@@ -44,7 +44,7 @@ data "external" "role_management_policy_assignment" {
 
   for_each = toset(values(var.pim_assignments)[*].role_name_rbac)
 
-  program = ["pwsh", "-NoProfile", "-file", "${path.module}/.scripts/Get-RoleManagementPolicyAssignment.ps1",
+  program = ["pwsh", "-NoProfile", "-file", "${abspath(path.module)}/_scripts/Get-RoleManagementPolicyAssignment.ps1",
     "-base_url", "https://management.azure.com/{0}/providers/Microsoft.Authorization/roleManagementPolicyAssignments?api-version=2020-10-01",
     "-toplevel_scope", "${local.pim_current_scope_resource_id}",
     "-role_name", "${each.value}",
