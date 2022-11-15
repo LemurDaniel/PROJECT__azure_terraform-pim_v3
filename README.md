@@ -6,6 +6,9 @@ Currenlty PIM isnt't supported by azurerm, so null_resources are used to make AP
 Credits: Teamlead [Bartosz Kubiack](https://www.linkedin.com/mwlite/in/bartoszkubiak-it)
 for Providing helpful Resources and Feedback.
 
+Note: 
+This module only supports PIM for RBAC-Roles, as of no requirement for manageing AD-Roles via Terraform, as of yet.
+
 ### Module Usage:
 
 - The module assigns PIM-Roles with corresponding settings on a scope defined by `assignment_scope`. This value can be of Form `managementGroups/<management_group_name>`, `/subscriptions/<subscription_name>`, `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>` or `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>/providers/<provider_name>/<resource_name>`
