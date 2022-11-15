@@ -46,7 +46,7 @@ locals {
     subscription = {
       is_scope = can(regex("^/subscriptions/[^/]+$", lower(var.assignment_scope)))
       name     = can(regex("\\d{4}", var.assignment_scope_name)) ? regex("\\d{4}", var.assignment_scope_name) : "NULL"
-      full     = format("/providers/Microsoft.Subscription%s", var.assignment_scope) 
+      full     = format("/providers/Microsoft.Subscription%s", var.assignment_scope)
       type     = "subs"
     }
     resource_group = {
@@ -78,18 +78,31 @@ locals {
 locals {
 
   ad_group_description = {
-    eligible = "PIM Group for the RBAC-Role '${var.role_definition_name}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring an action to activate the role. Managed by Azure Cloud Foundation. Group memberships can be managed manually."
-    active   = "PIM Group for the RBAC-Role '${var.role_definition_name}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring no action to activate the role. Managed by Azure Cloud Foundation. Group memberships can be managed manually."
+    eligible = "PIM Group for the RBAC-Role '${var.role_definition_name}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring an action to activate the role. Managed by Azure Cloud Foundation."
+    active   = "PIM Group for the RBAC-Role '${var.role_definition_name}' on Scope ${local.current_scope.type} - ${local.current_scope.name}. All Members will be of ${var.schedule_type}-Assignment in PIM, requiring no action to activate the role. Managed by Azure Cloud Foundation."
   }
 }
 
 
 # Create Azure AD Group for Eligible or Active PIM-Assignments
-resource "azuread_group" "pim_assignment_ad_group" {
-  display_name     = format("acf_pimv3_%s_%s_%s_%s", local.current_scope.type, local.current_scope.name, var.assignment_name, var.schedule_type)
+resource "azuread_group" "pim_assignment_ad_group_base" {
+  display_name     = format("acf_pimv3_%s_%s_%s_%s__BASE", local.current_scope.type, local.current_scope.name, var.assignment_name, var.schedule_type)
   mail_enabled     = false
   security_enabled = true
-  description      = local.ad_group_description[var.schedule_type]
+  description      = "Do not assing Members! Manual assigned Members will be removed! -- ${local.ad_group_description[var.schedule_type]}"
+
+  owners = var.aad_group_owner_ids
+
+}
+
+# Create Azure AD Group for Eligible or Active Assignments with ignored Memeber lifecycle (For example for outside management via Access Packages)
+resource "azuread_group" "pim_assignment_ad_group_ignore_lifecycle" {
+  count = var.enable_manual_member_group ? 1 : 0
+
+  display_name     = format("acf_pimv3_%s_%s_%s_%s__ManualMembers", local.current_scope.type, local.current_scope.name, var.assignment_name, var.schedule_type)
+  mail_enabled     = false
+  security_enabled = true
+  description      = "Group memberships can be managed manually. -- ${local.ad_group_description[var.schedule_type]}"
 
   owners = var.aad_group_owner_ids
 
@@ -98,5 +111,31 @@ resource "azuread_group" "pim_assignment_ad_group" {
       members
     ]
   }
+}
+
+resource "azuread_group_member" "pim_assignment_ad_group_ignore_lifecycle" {
+  count = var.enable_manual_member_group ? 1 : 0
+
+  group_object_id  = azuread_group.pim_assignment_ad_group_base.id
+  member_object_id = azuread_group.pim_assignment_ad_group_ignore_lifecycle[0].id
+}
+
+
+# Assign Members to PIM-AD-Group via Terraform.
+data "azuread_user" "assignment_group_members" {
+  for_each = toset([
+    for approver in var.assignment_group_members :
+    approver if length(regexall("^.+@.+[.].+$", lower(approver))) > 0
+  ])
+
+  //mail_nickname = each.key
+  user_principal_name = each.key
+}
+
+resource "azuread_group_member" "assignment_group_members" {
+  for_each = data.azuread_user.assignment_group_members
+
+  group_object_id  = azuread_group.pim_assignment_ad_group_base.id
+  member_object_id = each.value.id
 }
 

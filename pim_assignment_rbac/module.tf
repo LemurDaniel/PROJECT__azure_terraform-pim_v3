@@ -249,14 +249,16 @@ module "pim_assignment_eligible" {
   # Deploys all Eligible assignments on various scopes.
   schedule_type = "eligible"
 
-  assignment_name     = each.key
-  assignment_scope    = var.assignment_scope
-  assignment_schedule = each.value.assignment_eligible
+  assignment_name          = each.key
+  assignment_scope         = var.assignment_scope
+  assignment_schedule      = each.value.assignment_eligible
+  assignment_group_members = flatten(concat(var.default_group_members, lookup(each.value, "assignment_group_members", [])))
 
-  assignment_scope_name = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
-  role_definition_name  = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name
-  role_definition_id    = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_id
-  aad_group_owner_ids   = var.aad_group_owner_ids
+  assignment_scope_name      = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
+  role_definition_name       = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name
+  role_definition_id         = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_id
+  aad_group_owner_ids        = var.aad_group_owner_ids
+  enable_manual_member_group = var.enable_manual_member_group
 
   depends_on = [
     module.pim_settings_activation_elgibile,
@@ -278,14 +280,16 @@ module "pim_assignment_active" {
   # Deploys all Eligible assignments on various scopes.
   schedule_type = "active"
 
-  assignment_name     = each.key
-  assignment_scope    = var.assignment_scope
-  assignment_schedule = each.value.assignment_active
+  assignment_name          = each.key
+  assignment_scope         = var.assignment_scope
+  assignment_schedule      = each.value.assignment_active
+  assignment_group_members = flatten(concat(var.default_group_members, lookup(each.value, "assignment_group_members", [])))
 
-  assignment_scope_name = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
-  role_definition_name  = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name
-  role_definition_id    = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_id
-  aad_group_owner_ids   = var.aad_group_owner_ids
+  assignment_scope_name      = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
+  role_definition_name       = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name
+  role_definition_id         = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_id
+  aad_group_owner_ids        = var.aad_group_owner_ids
+  enable_manual_member_group = var.enable_manual_member_group
 
   depends_on = [
     module.pim_settings_activation_elgibile,

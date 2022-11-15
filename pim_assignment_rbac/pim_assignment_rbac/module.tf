@@ -22,7 +22,7 @@ locals {
       #conditionVersion = "string"
       requestType      = "%s_requestType_%s"
       justification    = "pim_${var.schedule_type}_assignment_created_on_${local.current_scope.type}_${local.current_scope.name}__by_ACF_deployment_code"
-      principalId      = azuread_group.pim_assignment_ad_group.id
+      principalId      = azuread_group.pim_assignment_ad_group_base.id
       roleDefinitionId = var.role_definition_id
       scheduleInfo = {
         expiration = {

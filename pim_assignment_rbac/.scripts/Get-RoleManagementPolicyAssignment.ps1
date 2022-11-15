@@ -20,8 +20,10 @@ param(
 
 $toplevel_scope_sub_guid = $toplevel_scope
 $toplevel_scope_sub_name = $toplevel_scope
+
 if ($toplevel_scope.Contains('/providers/Microsoft.Subscription')) {
   $splitted_scope = $toplevel_scope -split '/'
+
   $azAccountSubdata = (az account list | ConvertFrom-Json) | Where-Object { $_.homeTenantId -eq $tenant_id }
   if (!([System.Guid]::TryParse($splitted_scope[4], [System.Management.Automation.PSReference][System.Guid]::Empty))) {
     $splitted_scope[4] = ($azAccountSubdata | Where-Object { $_.name -eq $splitted_scope[4] })[0].id
@@ -32,7 +34,6 @@ if ($toplevel_scope.Contains('/providers/Microsoft.Subscription')) {
     $toplevel_scope_sub_name = ($splitted_scope -join '/')
   }
 }
-
 
 $url = [System.String]::format($base_url, $toplevel_scope_sub_guid)
 $response = az rest --method GET --url $url
@@ -46,7 +47,7 @@ foreach ($roleManagementPolicyAssignment in $responseConvertedObject) {
   $rbacDisplayName = $roleManagementPolicyAssignment.properties.policyAssignmentProperties.roleDefinition.displayName
   $assignment_scope_name = ($toplevel_scope_sub_name -split '/')[-1]
 
-  # Apparently external data-sources can only handle one layer of depth with no nested objects as results.
+  # Apparantly external data sources can only handle one layer of depth with no nested objects.
   $MapOfRoleManagementPolicyAssigments_PerRoleDisplayName.add($rbacDisplayName , [PSCustomObject]@{
 
       scope                                  = $roleManagementPolicyAssignment.properties.scope

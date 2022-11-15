@@ -23,6 +23,18 @@ variable "aad_group_owner_ids" {
   description = "(Required) List of Ids set as owner to the created AAD Groups."
 }
 
+variable "enable_manual_member_group" {
+  type        = bool
+  description = "(Required) Switch to Deploy or not Deploy AD-Group for Assignments outside Terraform, for example via Access-Packages."
+}
+
+variable "assignment_group_members" {
+  type        = list(string)
+  description = "(Optional) List of principal_names of Assigned for PIM-AD-Group.(If no Access-Packages Manual Assignments are used)"
+  default     = []
+}
+
+
 
 #################
 

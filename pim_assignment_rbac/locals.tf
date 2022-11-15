@@ -39,7 +39,6 @@ locals {
 
 }
 
-
 data "azurerm_client_config" "current" {}
 data "external" "role_management_policy_assignment" {
 
@@ -52,9 +51,4 @@ data "external" "role_management_policy_assignment" {
     "-tenant_id", "${data.azurerm_client_config.current.tenant_id}"
   ]
 
-}
-
-
-output "test" {
-  value = data.external.role_management_policy_assignment
 }
