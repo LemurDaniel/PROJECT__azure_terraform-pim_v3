@@ -96,6 +96,10 @@ resource "azuread_group" "pim_assignment_ad_group_base" {
 }
 
 # Create Azure AD Group for Eligible or Active Assignments with ignored Memeber lifecycle (For example for outside management via Access Packages)
+moved {
+  from = azuread_group.pim_assignment_ad_group
+  to   = azuread_group.pim_assignment_ad_group_ignore_lifecycle[0]
+}
 resource "azuread_group" "pim_assignment_ad_group_ignore_lifecycle" {
   count = var.enable_manual_member_group ? 1 : 0
 
