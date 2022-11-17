@@ -20,6 +20,18 @@ variable "default_group_members" {
   default     = []
 }
 
+variable "default_group_members_eligible" {
+  type        = list(string)
+  description = "(Optional) List of principal_names of Default Members for PIM-AD-Groups on this Scope for Eligible-Assignemnts."
+  default     = []
+}
+
+variable "default_group_members_active" {
+  type        = list(string)
+  description = "(Optional) List of principal_names of Default Members for PIM-AD-Groups on this Scope for Active-Assignments."
+  default     = []
+}
+
 
 variable "pim_defaults" {
   description = "(Optional) Default Configuration applied to all PIM-Settings if not specifed otherwise. (Settings not specifed here or in assignment remain as Azure Defaults)"
@@ -116,7 +128,8 @@ variable "pim_assignments" {
       assignment_eligible = optional(string)
       assignment_active   = optional(string)
 
-      assignment_group_members = []
+      assignment_members_eligible = []
+      assignment_members_active = []
 
       settings_activation = optional(object({
          maximum_duration = optional(string)  // "# hours"

@@ -235,15 +235,23 @@ module "pim_settings_notification" {
 #############   Deploy PIM-Assignments (eligible/active)
 #############################################################################################
 
-
+locals {
+  pim_assignments = {
+    for assignment_name, pim_assignment in var.pim_assignments :
+    assignment_name => merge(pim_assignment, {
+      assignment_members_eligible = flatten(concat(var.default_group_members, var.default_group_members_eligible, lookup(pim_assignment, "assignment_members_eligible", [])))
+      assignment_members_active   = flatten(concat(var.default_group_members, var.default_group_members_eligible, lookup(pim_assignment, "assignment_members_active", [])))
+    })
+  }
+}
 module "pim_assignment_eligible" {
   source = "./pim_assignment_rbac"
 
   # Filter out assignments with eligible enabled.
   for_each = {
-    for assignment_name, pim_assignment in var.pim_assignments :
+    for assignment_name, pim_assignment in local.pim_assignments :
     assignment_name => pim_assignment
-    if lookup(pim_assignment, "assignment_eligible", null) != null
+    if lookup(pim_assignment, "assignment_eligible", null) != null && (var.enable_manual_member_group || length(pim_assignment.assignment_members_eligible) > 0)
   }
 
   # Deploys all Eligible assignments on various scopes.
@@ -252,7 +260,7 @@ module "pim_assignment_eligible" {
   assignment_name          = each.key
   assignment_scope         = var.assignment_scope
   assignment_schedule      = each.value.assignment_eligible
-  assignment_group_members = flatten(concat(var.default_group_members, lookup(each.value, "assignment_group_members", [])))
+  assignment_group_members = each.value.assignment_members_eligible
 
   assignment_scope_name      = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
   role_definition_name       = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name
@@ -266,24 +274,23 @@ module "pim_assignment_eligible" {
   ]
 }
 
-
 module "pim_assignment_active" {
   source = "./pim_assignment_rbac"
 
   # Filter out assignments with active enabled.
   for_each = {
-    for assignment_name, pim_assignment in var.pim_assignments :
+    for assignment_name, pim_assignment in local.pim_assignments :
     assignment_name => pim_assignment
-    if lookup(pim_assignment, "assignment_active", null) != null
+    if lookup(pim_assignment, "assignment_active", null) != null && (var.enable_manual_member_group || length(pim_assignment.assignment_members_active) > 0)
   }
 
-  # Deploys all Eligible assignments on various scopes.
+  # Deploys all Active assignments on various scopes.
   schedule_type = "active"
 
   assignment_name          = each.key
   assignment_scope         = var.assignment_scope
   assignment_schedule      = each.value.assignment_active
-  assignment_group_members = flatten(concat(var.default_group_members, lookup(each.value, "assignment_group_members", [])))
+  assignment_group_members = each.value.assignment_members_active
 
   assignment_scope_name      = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.assignment_scope_name
   role_definition_name       = data.external.role_management_policy_assignment[each.value.role_name_rbac].result.role_definition_name

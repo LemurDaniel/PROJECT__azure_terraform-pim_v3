@@ -128,18 +128,47 @@ resource "azuread_group_member" "pim_assignment_ad_group_ignore_lifecycle" {
 # Assign Members to PIM-AD-Group via Terraform.
 data "azuread_user" "assignment_group_members" {
   for_each = toset([
-    for approver in var.assignment_group_members :
-    approver if length(regexall("^.+@.+[.].+$", lower(approver))) > 0
+    for member in var.assignment_group_members :
+    member if length(regexall("^.+@.+[.].+$", lower(member))) > 0 && length(regexall("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$", member)) == 0
   ])
 
   //mail_nickname = each.key
   user_principal_name = each.key
 }
-
-resource "azuread_group_member" "assignment_group_members" {
+moved {
+  from = azuread_group_member.assignment_group_members
+  to   = azuread_group_member.assignment_group_members_upns
+}
+resource "azuread_group_member" "assignment_group_members_upns" {
   for_each = data.azuread_user.assignment_group_members
 
   group_object_id  = azuread_group.pim_assignment_ad_group_base.id
   member_object_id = each.value.id
 }
 
+# Query members groups IDs defined as groups owners in JSON file
+data "azuread_group" "assignment_group_members" {
+  for_each = toset([
+    for member in var.assignment_group_members :
+    member if length(regexall("^.+@.+[.].+$", lower(member))) == 0 && length(regexall("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$", member)) == 0
+  ])
+
+  display_name = each.key
+}
+resource "azuread_group_member" "assignment_group_members_groups" {
+  for_each = data.azuread_group.assignment_group_members
+
+  group_object_id  = azuread_group.pim_assignment_ad_group_base.id
+  member_object_id = each.value.id
+}
+
+resource "azuread_group_member" "assignment_group_members_object_ids" {
+  for_each = toset([
+    for member in var.assignment_group_members :
+    member
+    if length(regexall("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$", member)) > 0
+  ])
+
+  group_object_id  = azuread_group.pim_assignment_ad_group_base.id
+  member_object_id = each.value
+}
