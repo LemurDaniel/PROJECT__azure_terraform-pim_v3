@@ -58,6 +58,12 @@ module "pim_assignment_rbac" {
   assignment_scope    = each.value.assignment_scope
   pim_assignments     = each.value.pim_assignments
   aad_group_owner_ids = [data.azurerm_client_config.current.object_id]
+
+  enable_manual_member_group      = [] (optional)
+  default_group_members           = [] (optional)
+  default_group_members_eligible  = [] (optional)
+  default_group_members_active    = [] (optional)
+  pim_defaults = {} (optional)
 }
 
 ```
@@ -79,6 +85,10 @@ locals {
           role_name_rbac      = "<rbac_role_name_for_pim"
           assignment_eligible = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for eligible assignments
           assignment_active   = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for active assignments (can be 1 Month(s) or 1.5 Month(s), etc.)
+          
+          assignment_members_eligible = ["user_principal_name", "aad_group_name", "obejct_id"]
+          assignment_members_active   = ["user_principal_name", "aad_group_name", "obejct_id"]
+
           settings_activation = {
             maximum_duration   = "<0.5-24 Hour(s)"                     // Maximum Activation length for eligible assignment activations
             activation_rules   = ["Justification", "Ticketing", "MFA"] // Activation Rules for eligible assignment activations
@@ -86,7 +96,7 @@ locals {
           }
         }
 
-         "DNSZoneContrib" = {
+        "DNSZoneContrib" = {
           role_name_rbac      = "DNS Zone Contributor"
           assignment_eligible = "Permanent"
           settings_activation = {
@@ -108,9 +118,7 @@ locals {
 
 - As alread defined in the upper Module, several adjustments can be made to PIM-Assignments. Since the Relationship between PIM-Settings and Assignemnts per Scope is as Such: Each Scope has ONE-Set of Settings for Each RBAC-Role, but can have multiple assignments for Each RBAC-Role. So for other use cases it might be sensible to extract the Modules for PIM-settings of the Current Implementation to another custom Module.
 
-- (Update) Now an external Data-Source is used wich reads when Performing terraform plan, making the previous static files obsolete.
-
- - Additional Settings are defined in the same PIM-Assignments Blocks as optional-Keys. Leaving them out will either deploy any predefined defaults under `pim_defaults` or make no changes to those settings.
+- Additional Settings are defined in the same PIM-Assignments Blocks as optional-Keys. Leaving them out will either deploy any predefined defaults under `pim_defaults` or make no changes to those settings.
 
 
 
@@ -125,6 +133,9 @@ locals {
           role_name_rbac      = "<rbac_role_name_for_pim"
           assignment_eligible = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for eligible assignments
           assignment_active   = "<Null | Disabled | Permanent | #/#.# Year(s) | #/#.# Month(s) | #/#.# Day(s)" // Assignment length for active assignments (can be 1 Month(s) or 1.5 Month(s), etc.)
+
+          assignment_members_eligible = ["user_principal_name", "aad_group_name", "obejct_id"]
+          assignment_members_active   = ["user_principal_name", "aad_group_name", "obejct_id"]
 
           settings_activation = {
             maximum_duration   = "<0.5-24 Hour(s)"                     // Maximum Activation length for eligible assignment activations
