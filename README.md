@@ -7,7 +7,7 @@ Credits: Teamlead [Bartosz Kubiack](https://www.linkedin.com/mwlite/in/bartoszku
 for Providing helpful Resources and Feedback.
 
 Note: 
-This module only supports PIM for RBAC-Roles, as no requirement for manageing AD-Roles via Terraform yet.
+This module only supports PIM for RBAC-Roles, as no requirements for manageing AAD-Roles via Terraform yet.
 
 ### Module Usage:
 
@@ -18,7 +18,7 @@ This module only supports PIM for RBAC-Roles, as no requirement for manageing AD
    - `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>/providers/<provider_name>/<resource_name>`
    (`<subscription_name>` and `<subscription_id>` can be used interchangeably) 
 
-- For each PIM-Assignment a corresponding Azure AAD Group gets created with naming `acf_pimv3_<scope_type>_<scope_name>_<assignment_name>_<schedule_type>__BASE` and `aad_group_owner_ids` defines the owners of said groups.
+- For each PIM-Assignment a corresponding Azure AAD-Group gets created with naming `acf_pimv3_<scope_type>_<scope_name>_<assignment_name>_<schedule_type>__BASE` and `aad_group_owner_ids` defines the owners of said groups.
 
 - When `enable_manual_member_group` is true another AAD with naming `acf_pimv3_<scope_type>_<scope_name>_<assignment_name>_<schedule_type>__ManualMembers` gets created for assigning non-terraform managed members. (For example Manually or via Access Packages, etc.)
 
