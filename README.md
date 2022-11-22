@@ -12,7 +12,7 @@ This module only supports PIM for RBAC-Roles, as of no requirement for manageing
 ### Module Usage:
 
 - The module assigns PIM-Roles with corresponding settings on a scope defined by `assignment_scope`. This value can be of Form:
-   - `managementGroups/<management_group_name>`
+   - `/managementGroups/<management_group_name>`
    - `/subscriptions/<subscription_name>`
    - `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>`
    - `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>/providers/<provider_name>/<resource_name>`
