@@ -11,14 +11,21 @@ This module only supports PIM for RBAC-Roles, as of no requirement for manageing
 
 ### Module Usage:
 
-- The module assigns PIM-Roles with corresponding settings on a scope defined by `assignment_scope`. This value can be of Form `managementGroups/<management_group_name>`, `/subscriptions/<subscription_name>`, `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>` or `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>/providers/<provider_name>/<resource_name>`
+- The module assigns PIM-Roles with corresponding settings on a scope defined by `assignment_scope`. This value can be of Form:
+   - `managementGroups/<management_group_name>`
+   - `/subscriptions/<subscription_name>`
+   - `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>`
+   - `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>/providers/<provider_name>/<resource_name>`
 
-- For each PIM-Assignment a corresponding Azure AD Group gets created with naming `acf_pimv3_<scope_type>_<scope_name>_<assignment_name>_<schedule_type>` and `aad_group_owner_ids` defines the owners of said groups.
+- For each PIM-Assignment a corresponding Azure AAD Group gets created with naming `acf_pimv3_<scope_type>_<scope_name>_<assignment_name>_<schedule_type>__BASE` and `aad_group_owner_ids` defines the owners of said groups.
+
+- When `enable_manual_member_group` is true another AAD with naming `acf_pimv3_<scope_type>_<scope_name>_<assignment_name>_<schedule_type>__ManualMembers` gets created for assigning non-terraform managed members. (For example Manually or via Access Packages, etc.)
 
 - All PIM-Assignments for that specific scope are defined under the key `pim_assignments`.
 
 
 It's meant to use a for_each to iterate over all different scopes with defined PIM-Assignments. So the terraform object for each scope should look like this:
+
 
 
 ```terraform
