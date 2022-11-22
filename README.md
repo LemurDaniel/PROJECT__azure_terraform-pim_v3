@@ -16,6 +16,7 @@ This module only supports PIM for RBAC-Roles, as of no requirement for manageing
    - `/subscriptions/<subscription_name>`
    - `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>`
    - `/subscriptions/<subscription_name>/resourceGroups/<resource_group_name>/providers/<provider_name>/<resource_name>`
+   (`<subscription_name>` and `<subscription_id>` can be used interchangeably) 
 
 - For each PIM-Assignment a corresponding Azure AAD Group gets created with naming `acf_pimv3_<scope_type>_<scope_name>_<assignment_name>_<schedule_type>__BASE` and `aad_group_owner_ids` defines the owners of said groups.
 
