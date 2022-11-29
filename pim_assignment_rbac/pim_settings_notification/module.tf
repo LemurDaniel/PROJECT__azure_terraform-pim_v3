@@ -30,8 +30,8 @@ locals {
 # ! On Replacement the destroy local-exec is called, setting the default values !
 # ! An immediate call with new values leads to not updating correctly, leaving the default values !
 # ! The Time-Sleep causes some wating time after, destruction(setting default values), before applying the updated values !
-resource "time_sleep" "wait_40_seconds__pim_assignment_notification_settings" {
-  create_duration = "40s"
+resource "time_sleep" "wait_30_seconds__pim_assignment_notification_settings" {
+  create_duration = "30s"
 
   triggers = {
     role_management_patch_url              = format(local.pim_role_management_policy_url_base, var.scope_resource_id, var.role_management_policy_guid)
@@ -42,7 +42,7 @@ resource "time_sleep" "wait_40_seconds__pim_assignment_notification_settings" {
 resource "null_resource" "pim_assignment_notification_settings" {
 
   depends_on = [
-    time_sleep.wait_40_seconds__pim_assignment_notification_settings
+    time_sleep.wait_30_seconds__pim_assignment_notification_settings
   ]
   triggers = {
     role_management_patch_url = format(local.pim_role_management_policy_url_base, var.scope_resource_id, var.role_management_policy_guid)

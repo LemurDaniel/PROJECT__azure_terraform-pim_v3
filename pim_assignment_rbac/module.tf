@@ -196,12 +196,12 @@ locals {
 
 }
 
-resource "time_sleep" "wait_20_seconds_settings_notification" {
+resource "time_sleep" "wait_10_seconds_settings_notification" {
   triggers = {
     settings = jsonencode(local.notifications_by_type)
   }
 
-  create_duration = "20s"
+  create_duration = "10s"
 
   depends_on = [
     module.pim_settings_activation_elgibile,
@@ -226,7 +226,7 @@ module "pim_settings_notification" {
   notification_approver  = each.value.notification_approver
 
   depends_on = [
-    time_sleep.wait_20_seconds_settings_notification
+    time_sleep.wait_10_seconds_settings_notification
   ]
 }
 
@@ -234,6 +234,19 @@ module "pim_settings_notification" {
 #############################################################################################
 #############   Deploy PIM-Assignments (eligible/active)
 #############################################################################################
+
+resource "time_sleep" "wait_20_seconds_pim_assignments" {
+  triggers = {
+    settings = jsonencode(local.notifications_by_type)
+  }
+
+  create_duration = "20s"
+
+  depends_on = [
+    module.pim_settings_notification
+  ]
+}
+
 
 locals {
   pim_assignments = {
@@ -269,8 +282,7 @@ module "pim_assignment_eligible" {
   enable_manual_member_group = var.enable_manual_member_group
 
   depends_on = [
-    module.pim_settings_activation_elgibile,
-    module.pim_settings_assignment_eligible
+    time_sleep.wait_20_seconds_pim_assignments
   ]
 }
 
@@ -299,7 +311,6 @@ module "pim_assignment_active" {
   enable_manual_member_group = var.enable_manual_member_group
 
   depends_on = [
-    module.pim_settings_activation_elgibile,
-    module.pim_settings_assignment_eligible
+    time_sleep.wait_20_seconds_pim_assignments
   ]
 }

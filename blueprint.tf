@@ -1,5 +1,5 @@
 
-/*
+# For testing
 resource "azurerm_management_group" "root" {
   display_name = "acfroot"
   name         = "acfroot"
@@ -22,7 +22,7 @@ resource "azurerm_management_group" "sandbox" {
   name                       = "sandbox-test"
   parent_management_group_id = azurerm_management_group.root.id
 }
-*/
+
 
 
 
