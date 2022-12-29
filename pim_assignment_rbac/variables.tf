@@ -119,81 +119,80 @@ variable "pim_defaults" {
   })
 }
 
+
 variable "pim_assignments" {
-  /*
-  type = object({
-    "string" = object({
+  description = "(Required) List of PIM-Assignments on the current scope."
+  type = map(
+    object({
       role_name_rbac = string
 
       assignment_eligible = optional(string)
       assignment_active   = optional(string)
 
       assignment_members_eligible = []
-      assignment_members_active = []
+      assignment_members_active   = []
 
       settings_activation = optional(object({
-         maximum_duration = optional(string)  // "# hours"
-         activation_rules = optional(list(string)) // ["Justification", "MFA", "Ticketing"]
-         required_approvers = optional(list(string)) // user_principal_name
+        maximum_duration   = optional(string)       // "# hours"
+        activation_rules   = optional(list(string)) // ["Justification", "MFA", "Ticketing"]
+        required_approvers = optional(list(string)) // user_principal_name
       }))
 
       notifications_eligible = optional(object({
         eligible_notice_admin = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address   
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address   
         }))
         eligible_notice_requestor = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address 
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address 
         }))
         eligible_notice_approver = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address 
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address 
         }))
       }))
 
       notifications_assignment = optional(object({
         assignment_notice_admin = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address   
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address   
         }))
         assignment_notice_requestor = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address 
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address 
         }))
         assignment_notice_approver = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address 
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address 
         }))
       }))
 
       notifications_activation = optional(object({
         activation_notice_admin = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address   
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address   
         }))
         activation_notice_requestor = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address 
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address 
         }))
         activation_notice_approver = optional(object({
-            notification_level      = optional(string)  // "All" | "Critical"
-            default_recipients      = optional(bool)
-            notification_recipients = optional(list(string))  // Mail-Address 
+          notification_level      = optional(string) // "All" | "Critical"
+          default_recipients      = optional(bool)
+          notification_recipients = optional(list(string)) // Mail-Address 
         }))
       }))
 
     })
-  })
-  */
+  )
 
-  description = "(Required) List of PIM-Assignments on the current scope."
 }
