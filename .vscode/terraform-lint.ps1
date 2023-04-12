@@ -1,74 +1,174 @@
-param([System.Boolean]$lintRootModule, [System.String[]]$excluded)
+param([switch]$useCachedEnvironment, [switch]$runFromPipelineAgent, [string]$location, [string]$config)
 $ErrorActionPreference = 'Stop'
 
-Clear-Host
-Write-Host ''
-Write-Host "Invoking `"tflint`""
-
-$modules = Get-ChildItem -Recurse -Directory | Where-Object { $_.BaseName -notin $excluded }
-
-try {
-  tflint --init
+if ($useCachedEnvironment) {
+  $cachedEnvirontment = Get-Content -Path '.vscode/last_used_env.json' | ConvertFrom-Json
+  
+  Clear-Host
+  Write-Host ''
+  Write-Host "Invoking `"tflint`""
+  Write-Host "Name     : $($cachedEnvirontment.Name)"
+  Write-Host "State    : $($cachedEnvirontment.StateEnvironment)"
+  if ($cachedEnvirontment.Name -eq 'landingzone_acf_appzone') {
+    Write-Host "Workpace : $($cachedEnvirontment.Workspace)"
+  }
+  
+  $currentWorkingDirectory = (Resolve-Path -Path "landingzones/$($cachedEnvirontment.Name)" ).Path
 }
-catch {
-  if ($_.FullyQualifiedErrorId -eq 'CommandNotFoundException') {
-    $lintSourceUrl = 'https://github.com/terraform-linters/tflint/releases/latest'
-    try {
-      $latestVersion = Invoke-WebRequest $lintSourceUrl -ErrorAction Stop
-      [version]$version = ($latestVersion.BaseResponse.RequestMessage.RequestUri.AbsoluteUri |
-        Select-String -Pattern '(?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)').Matches.Value
-      $lintLatestUrl = "https://github.com/terraform-linters/tflint/releases/download/v$version/tflint_windows_386.zip"
-    }
-    catch {
-      $lintLatestUrl = $lintSourceUrl
-    }
-    
+elseif ($location) {
+  $currentWorkingDirectory = $location
+}
+else {
+  $currentWorkingDirectory = (Get-Location).Path
+}
+
+Write-Host "Current Location $currentWorkingDirectory"
+$modules = Get-ChildItem -Path $currentWorkingDirectory -Recurse -Directory | Where-Object { 
+  (Get-ChildItem -Path $_.FullName -File '*.tf*' | Measure-Object).Count -gt 0
+}
+$modules = @(Get-Item -Path $currentWorkingDirectory) + $modules
+
+
+
+$isLintInstalled = Get-Command -Name tflint -ErrorAction SilentlyContinue
+
+if ($null -eq $isLintInstalled) {
+  $lintSourceUrl = 'https://github.com/terraform-linters/tflint/releases/latest'
+  try {
+    $latestVersion = Invoke-WebRequest $lintSourceUrl -ErrorAction Stop
+    [version]$version = ($latestVersion.BaseResponse.RequestMessage.RequestUri.AbsoluteUri |
+      Select-String -Pattern '(?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)').Matches.Value
+    $lintLatestUrl = "https://github.com/terraform-linters/tflint/releases/download/v$version/tflint_windows_386.zip"
+  }
+  catch {
+    $lintLatestUrl = $lintSourceUrl
+  }
+
+  if (!$runFromPipelineAgent) {
     Write-Error "TFLint seems not to be installed properly, download it from $lintLatestUrl and add it to your path!"
   }
   else {
-    throw $_.Exception
+    Write-Host 'Installing Lint'
+    curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash  
   }
+  
 }
 
-$TFLint = @()
-foreach ($module in $modules) {
-  $relativeModulePath = ('.') + $module.FullName -replace ([regex]::Escape($pwd)), $null
-  $containsTFFiles = (Get-ChildItem $relativeModulePath -File '*.tf*' | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
-  if (-not$containsTFFiles) {
-    Write-Host "skipping `"$relativeModulePath`" (no tf files)" -ForegroundColor DarkGray
-    continue
+
+
+tflint --chdir=$currentWorkingDirectory --config=$config --init 
+
+$TFLintIssues = @()
+for ($index = 0; $index -lt $modules.Count; $index++) {
+  $relativeModulePath = ('.') + $modules[$index].FullName -replace ([regex]::Escape($currentWorkingDirectory)), $null
+
+  $Progress = @{
+    Activity        = 'tflinting'
+    Completed       = $index -eq ($modules.Count - 1)
+    PercentComplete = [System.Math]::Round($index / $modules.Count * 100)
+    Status          = "$($Progress.PercentComplete)% | linting `"$relativeModulePath`""
   }
-  Write-Host "linting `"$relativeModulePath`"" -ForegroundColor Yellow
+  Write-Progress @Progress 
+  
   $lintCommand = @(
-    '/format:json'
+    "--chdir=$($modules[$index].FullName)",
+    "--config=$config"
+    '--format=json'
   )
-  if ($relativeModulePath -eq '.') {
-    $lintCommand += @('/module')
+
+  if ((Get-ChildItem -Filter '*.tfvars').Count -gt 0) {
+    if ($cachedEnvirontment.StateEnvironment -eq 'prod') {
+      $lintCommand += @("--var-file=$currentWorkingDirectory/landingzone.prod.tfvars")
+    }
+    else {
+      $lintCommand += @("--var-file=$currentWorkingDirectory/landingzone.dev.auto.tfvars")
+    }
   }
-  $lintCommand += @("$relativeModulePath")
-  $curTFLint = @{}
-  $curTFLint = tflint $lintCommand | ConvertFrom-Json
-  $TFLint += $curTFLint
+  #if ($module.FullName -eq $currentWorkingDirectory) {
+  #  $lintCommand += @('--module')
+  #}
+  #$lintCommand += @("$relativeModulePath")
+
+  $TFLintIssues += (tflint $lintCommand | ConvertFrom-Json | Select-Object -ExpandProperty Issues)
 }
 
-if ($lintRootModule) {
-  $TFLint += tflint '/format:json' '.' | ConvertFrom-Json
-}
-
-$tfLintSelect = $TFLint.Issues |
+$tfLintSelect = $TFLintIssues |
+Select-Object -Property *, @{
+  Name       = 'range_identifier';
+  Expression = {
+    "$($_.range.filename)|$($_.range.start.line)-$($_.range.start.column)|$($_.range.end.line)-$($_.range.end.column)"
+  }
+} | 
+Group-Object -Property range_identifier |
 Select-Object -Property @(
-  @{Name = 'File'; Expression = { $_.range.filename } },
-  @{Name = 'Directory'; Expression = { Get-Item -Path $_.range.filename | Select-Object -ExpandProperty Directory } },
-  @{Name = 'Line'; Expression = { $_.range.start.line } },
-  @{Name = 'Column'; Expression = { $_.range.start.column } },
-  @{Name = 'Severity'; Expression = { $_.rule.Severity } },
-  @{Name = 'Name'; Expression = { $_.rule.name } },
-  @{Name = 'Message'; Expression = { $_.message } },
-  @{Name = 'Link'; Expression = { $_.rule.link } }
+  @{Name = 'Line'; Expression = { 
+      $_.Group[0].range.start.line
+    }
+  },
+  @{Name = 'Column'; Expression = { 
+      $_.Group[0].range.start.column
+    }
+  },
+  @{Name = 'File'; Expression = { 
+      $_.Group[0].range.filename } 
+  },
+  @{Name = 'Directory'; Expression = { 
+      Get-Item -Path $_.Group[0].range.filename | Select-Object -ExpandProperty Directory } 
+  },
+  @{Name = 'SeverityLevels'; Expression = {
+      @{
+        Highest  = $_.Group.rule.Severity | Sort-Object { $('info', 'warning', 'error').indexOf($_) } | Select-Object -Last 1
+        Errors   = $_.Group.rule | Where-Object -Property Severity -EQ error | Measure-Object | Select-Object -ExpandProperty Count
+        Warnings = $_.Group.rule | Where-Object -Property Severity -EQ warning | Measure-Object | Select-Object -ExpandProperty Count
+        Infos    = $_.Group.rule | Where-Object -Property Severity -EQ info | Measure-Object | Select-Object -ExpandProperty Count
+      }
+    }
+  },
+  @{
+    Name       = 'Data';
+    Expression = {
+      $_.Group | Sort-Object { $('info', 'warning', 'error').indexOf($_.rule.Severity) }
+    }
+  },
+  @{
+    Name       = 'Rules';
+    Expression = {
+      $_.Group.rule.Name
+    }
+  },
+  @{
+    Name       = 'Messages';
+    Expression = {
+      $_.Group.message
+    }
+  }
 )
-$tfLintSelect | Format-List
 
+$tfLintSelect | Sort-Object -Property Severity | ForEach-Object {
+
+  $colorPalette = @{
+    error   = 'red'
+    warning = 'yellow'
+    info    = 'cyan'
+  }
+
+  Write-Host "`n------------------------`n"
+  $headline = "$($_.SeverityLevels.errors) Errors | $($_.SeverityLevels.warnings) Warnings | $($_.SeverityLevels.infos) Infos"
+  $position = "Line $($_.Line) | Column $($_.Column)"
+  Write-Host $headline
+  Write-Host $position
+  Write-Host $_.File
+  Write-Host $_.Directory
+  Write-Host
+
+  $_.data | ForEach-Object {
+    Write-Host -ForegroundColor $colorPalette[$_.rule.Severity] $_.rule.name
+    Write-Host -ForegroundColor $colorPalette[$_.rule.Severity] " $($_.message)"
+  }
+}
+
+Write-Host
+Write-Host
 Write-Host "$([System.Environment]::NewLine)found $($tfLintSelect.Count) issue(s)"
-Set-Location $oldWD
 $global:tfLintOutput = $tfLintSelect
 Write-Host "Hint: for a pwsh object representation of the tfplan, you can checkout the variable `"`$tfLintOutput`"" -ForegroundColor Cyan

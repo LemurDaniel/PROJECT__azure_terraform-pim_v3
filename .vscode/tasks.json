@@ -6,9 +6,12 @@
     {
       "label": "LINT - Run TFLint",
       "type": "shell",
-      "command": ".vscode\\terraform-lint.ps1",
+      "command": "${workspaceFolder}\\.vscode\\terraform-lint.ps1",
       "args": [
-        "$false"
+        "-location",
+        "${workspaceFolder}",
+        "-config",
+        "${workspaceFolder}\\.vscode\\.tflint.config.hcl"
       ],
       "presentation": {
         "echo": true,
