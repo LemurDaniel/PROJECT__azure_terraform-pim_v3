@@ -1,4 +1,4 @@
-param([switch]$useCachedEnvironment, [switch]$runFromPipelineAgent, [string]$location, [string]$config)
+param([switch]$useCachedEnvironment, [switch]$runFromPipelineAgent, [switch]$generateMarkdownFile, [string]$location, [string]$config)
 $ErrorActionPreference = 'Stop'
 
 if ($useCachedEnvironment) {
@@ -37,7 +37,7 @@ if ($null -eq $isLintInstalled) {
   try {
     $latestVersion = Invoke-WebRequest $lintSourceUrl -ErrorAction Stop
     [version]$version = ($latestVersion.BaseResponse.RequestMessage.RequestUri.AbsoluteUri |
-      Select-String -Pattern '(?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)').Matches.Value
+        Select-String -Pattern '(?:(\d+)\.)?(?:(\d+)\.)?(?:(\d+)\.\d+)').Matches.Value
     $lintLatestUrl = "https://github.com/terraform-linters/tflint/releases/download/v$version/tflint_windows_386.zip"
   }
   catch {
@@ -53,7 +53,6 @@ if ($null -eq $isLintInstalled) {
   }
   
 }
-
 
 
 tflint --chdir=$currentWorkingDirectory --config=$config --init 
@@ -93,57 +92,60 @@ for ($index = 0; $index -lt $modules.Count; $index++) {
 }
 
 $tfLintSelect = $TFLintIssues |
-Select-Object -Property *, @{
-  Name       = 'range_identifier';
-  Expression = {
-    "$($_.range.filename)|$($_.range.start.line)-$($_.range.start.column)|$($_.range.end.line)-$($_.range.end.column)"
-  }
-} | 
-Group-Object -Property range_identifier |
-Select-Object -Property @(
-  @{Name = 'Line'; Expression = { 
-      $_.Group[0].range.start.line
+  Select-Object -Property *, @{
+    Name       = 'range_identifier';
+    Expression = {
+      "$($_.range.filename)|$($_.range.start.line)-$($_.range.start.column)|$($_.range.end.line)-$($_.range.end.column)"
     }
-  },
-  @{Name = 'Column'; Expression = { 
-      $_.Group[0].range.start.column
-    }
-  },
-  @{Name = 'File'; Expression = { 
-      $_.Group[0].range.filename } 
-  },
-  @{Name = 'Directory'; Expression = { 
-      Get-Item -Path $_.Group[0].range.filename | Select-Object -ExpandProperty Directory } 
-  },
-  @{Name = 'SeverityLevels'; Expression = {
-      @{
-        Highest  = $_.Group.rule.Severity | Sort-Object { $('info', 'warning', 'error').indexOf($_) } | Select-Object -Last 1
-        Errors   = $_.Group.rule | Where-Object -Property Severity -EQ error | Measure-Object | Select-Object -ExpandProperty Count
-        Warnings = $_.Group.rule | Where-Object -Property Severity -EQ warning | Measure-Object | Select-Object -ExpandProperty Count
-        Infos    = $_.Group.rule | Where-Object -Property Severity -EQ info | Measure-Object | Select-Object -ExpandProperty Count
+  } | 
+  Group-Object -Property range_identifier |
+  Select-Object -Property @(
+    @{Name = 'Line'; Expression = { 
+        $_.Group[0].range.start.line
+      }
+    },
+    @{Name = 'Column'; Expression = { 
+        $_.Group[0].range.start.column
+      }
+    },
+    @{Name = 'File'; Expression = { 
+        $_.Group[0].range.filename } 
+    },
+    @{Name = 'Directory'; Expression = { 
+        Get-Item -Path $_.Group[0].range.filename | Select-Object -ExpandProperty Directory } 
+    },
+    @{Name = 'SeverityLevels'; Expression = {
+        @{
+          Highest  = $_.Group.rule.Severity | Sort-Object { $('info', 'warning', 'error').indexOf($_) } | Select-Object -Last 1
+          Errors   = $_.Group.rule | Where-Object -Property Severity -EQ error | Measure-Object | Select-Object -ExpandProperty Count
+          Warnings = $_.Group.rule | Where-Object -Property Severity -EQ warning | Measure-Object | Select-Object -ExpandProperty Count
+          Infos    = $_.Group.rule | Where-Object -Property Severity -EQ info | Measure-Object | Select-Object -ExpandProperty Count
+        }
+      }
+    },
+    @{
+      Name       = 'Data';
+      Expression = {
+        $_.Group | Sort-Object { $('info', 'warning', 'error').indexOf($_.rule.Severity) }
+      }
+    },
+    @{
+      Name       = 'Rules';
+      Expression = {
+        $_.Group.rule.Name
+      }
+    },
+    @{
+      Name       = 'Messages';
+      Expression = {
+        $_.Group.message
       }
     }
-  },
-  @{
-    Name       = 'Data';
-    Expression = {
-      $_.Group | Sort-Object { $('info', 'warning', 'error').indexOf($_.rule.Severity) }
-    }
-  },
-  @{
-    Name       = 'Rules';
-    Expression = {
-      $_.Group.rule.Name
-    }
-  },
-  @{
-    Name       = 'Messages';
-    Expression = {
-      $_.Group.message
-    }
-  }
-)
+  )
 
+
+
+Write-Host "`n -------------------------------------- Linting Results -------------------------------------- `n"
 $tfLintSelect | Sort-Object -Property Severity | ForEach-Object {
 
   $colorPalette = @{
@@ -153,22 +155,76 @@ $tfLintSelect | Sort-Object -Property Severity | ForEach-Object {
   }
 
   Write-Host "`n------------------------`n"
-  $headline = "$($_.SeverityLevels.errors) Errors | $($_.SeverityLevels.warnings) Warnings | $($_.SeverityLevels.infos) Infos"
-  $position = "Line $($_.Line) | Column $($_.Column)"
-  Write-Host $headline
+  $headline = "Linting:  $($_.SeverityLevels.errors) Errors | $($_.SeverityLevels.warnings) Warnings | $($_.SeverityLevels.infos) Infos"
+  $position = "Position: Line $($_.Line) | Column $($_.Column)"
   Write-Host $position
-  Write-Host $_.File
-  Write-Host $_.Directory
+  Write-Host $headline
+  Write-Host "File:     $($_.File)"
   Write-Host
 
   $_.data | ForEach-Object {
-    Write-Host -ForegroundColor $colorPalette[$_.rule.Severity] $_.rule.name
-    Write-Host -ForegroundColor $colorPalette[$_.rule.Severity] " $($_.message)"
+    Write-Host -ForegroundColor $colorPalette[$_.rule.Severity] "- $($_.rule.name)"
+    Write-Host -ForegroundColor $colorPalette[$_.rule.Severity] "   $($_.message)"
   }
 }
+Write-Host "`n -------------------------------------- Linting Results -------------------------------------- `n"
 
 Write-Host
 Write-Host
 Write-Host "$([System.Environment]::NewLine)found $($tfLintSelect.Count) issue(s)"
 $global:tfLintOutput = $tfLintSelect
 Write-Host "Hint: for a pwsh object representation of the tfplan, you can checkout the variable `"`$tfLintOutput`"" -ForegroundColor Cyan
+
+$lintingDetails = $(
+  ($tfLintSelect | 
+    ForEach-Object {
+          
+      $colorMapping = @{
+        error   = 'red'
+        warning = 'orange'
+        info    = 'cyan'
+      }
+      $Errors = "<span style=`"color:$($colorMapping['error'])`">$($_.SeverityLevels.errors) Errors </span>"
+      $Warnings = "<span style=`"color:$($colorMapping['warning'])`">$($_.SeverityLevels.warnings) Warnings </span>"
+      $Infos = "<span style=`"color:$($colorMapping['info'])`">$($_.SeverityLevels.infos) Infos </span>"
+
+      $section = "`n> |               |                                           |"
+      $section += "`n>|  ------------ | ----------------------------------------- |" 
+      $section += "`n>| __Linting:__  | __$Errors / $Warnings / $Infos`__         |" 
+      $section += "`n>| __Position:__ | __Line $($_.Line) / Column $($_.Column)__ |"
+      $section += "`n>| __File:__     | __$($_.File)__                            |"
+
+      $section += "`n>"
+      $section += "`n>"
+      $section += $_.data | ForEach-Object {
+
+        "`n>- <span style=`"color:$($colorMapping[$_.rule.severity])`">__$($_.rule.name)__</span>"
+        "`n>   - $($_.message)"
+      }
+
+      return $section
+    }
+    ) -join "`n`n"
+)
+
+$markdownComment = @"
+
+## Linting $env:BUILD_DEFINITIONNAME
+
+$lintingDetails
+
+"@
+
+if ($generateMarkdownFile -AND $tfLintSelect.Count -gt 0) {
+
+  $fileName = ".$((Get-Item -Path $currentWorkingDirectory).BaseName).tfilint.results.md"
+  $markdownComment | Out-File -FilePath $filename
+  code ".$((Get-Item -Path $currentWorkingDirectory).BaseName).tfilint.results.md"
+
+}
+
+if ($runFromPipelineAgent -AND $tfLintSelect.Count -gt 0) {
+
+  . "$PSScriptRoot/new-pullrequestcomment.ps1" -markdownComment $markdownComment
+
+}

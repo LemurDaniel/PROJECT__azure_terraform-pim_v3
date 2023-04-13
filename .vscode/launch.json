@@ -10,10 +10,11 @@
             "request": "launch",
             "script": "${workspaceFolder}/.vscode/terraform-lint.ps1",
             "args": [
+                "-generateMarkdownFile",
                 "-location",
-                "${workspaceFolder}",
+                "${workspaceFolder}\\policy_provisioner",
                 "-config",
-                "${workspaceFolder}\\.vscode\\.tflint.config.hcl"
+                "'${workspaceFolder}\\.vscode\\.tflint.config.hcl'"
             ],
             "cwd": "${workspaceFolder}",
             "createTemporaryIntegratedConsole": true
